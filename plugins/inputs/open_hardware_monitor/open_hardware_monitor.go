@@ -1,16 +1,19 @@
+//go:build windows
 // +build windows
 
 package open_hardware_monitor
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/StackExchange/wmi"
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
-	"strings"
 )
 
 type OpenHardwareMonitorConfig struct {
+	Namespace   string
 	SensorsType []string
 	Parent      []string
 }
@@ -32,6 +35,9 @@ const sampleConfig = `
 	
 	## Which hardware should be available
 	Parent = ["_intelcpu_0"]  # optional
+
+	# WMI Namespace to query
+	Namespace = "root/OpenHardwareMonitor"  # optional
 `
 
 func (p *OpenHardwareMonitorConfig) SampleConfig() string {
@@ -53,7 +59,7 @@ func (p *OpenHardwareMonitorConfig) CreateQuery() (string, error) {
 
 func (p *OpenHardwareMonitorConfig) QueryData(query string) ([]OpenHardwareMonitorData, error) {
 	var dst []OpenHardwareMonitorData
-	err := wmi.QueryNamespace(query, &dst, "root/OpenHardwareMonitor")
+	err := wmi.QueryNamespace(query, &dst, p.Namespace)
 
 	// Replace all spaces
 	replace := map[string]string{
@@ -109,6 +115,8 @@ func (p *OpenHardwareMonitorConfig) Gather(acc telegraf.Accumulator) error {
 
 func init() {
 	inputs.Add("open_hardware_monitor", func() telegraf.Input {
-		return &OpenHardwareMonitorConfig{}
+		return &OpenHardwareMonitorConfig{
+			Namespace:   "root/OpenHardwareMonitor",
+		}
 	})
 }
