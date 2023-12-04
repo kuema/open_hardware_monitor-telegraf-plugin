@@ -14,6 +14,7 @@ import (
 
 type OpenHardwareMonitorConfig struct {
 	Namespace   string
+	Measurement string
 	SensorsType []string
 	Parent      []string
 }
@@ -38,6 +39,9 @@ const sampleConfig = `
 
 	# WMI Namespace to query
 	Namespace = "root/OpenHardwareMonitor"  # optional
+
+	# Name of the measurement
+	Measurement = "ohm"  # optional
 `
 
 func (p *OpenHardwareMonitorConfig) SampleConfig() string {
@@ -104,7 +108,7 @@ func (p *OpenHardwareMonitorConfig) Gather(acc telegraf.Accumulator) error {
 					"parent": sensorData.Parent,
 				}
 				fields := map[string]interface{}{sensorData.SensorType: sensorData.Value}
-				acc.AddFields("ohm", fields, tags)
+				acc.AddFields(p.Measurement, fields, tags)
 			}
 		}
 	} else {
@@ -117,6 +121,7 @@ func init() {
 	inputs.Add("open_hardware_monitor", func() telegraf.Input {
 		return &OpenHardwareMonitorConfig{
 			Namespace:   "root/OpenHardwareMonitor",
+			Measurement: "ohm",
 		}
 	})
 }
